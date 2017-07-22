@@ -9,17 +9,18 @@ export StateMachine = Model.extend4000 do
     if not @states then return true
     if not @state then return true
     if name is 'error' then return true
-    if @states[state][name] then return true
+    if @states[@state][name] then return true
     false
     
   setState: (name, data) ->
-    if not @state then @state = @get('state')
-      
+    if not @state then @state = @get 'state'
     if not @verifyJump(name)
-      @setState 'error', new Error "invalid jump from #{@state} to #{name} with args #{JSON.stringify(data)}"
+      return @setState 'error', new Error "invalid jump from #{@state} to #{name} with args #{JSON.stringify(data)}"
       
     @set state: @state = name
-    @trigger "state_#{name}", name, data
+    
+    @trigger "changeState", name, data
+    @trigger "state:#{name}", data
 
     try
       @["state_#{name}"]?!then (res) ~>
@@ -28,7 +29,8 @@ export StateMachine = Model.extend4000 do
           | Object => if res.state? then @setState res.state, res.data
     catch error
       @setState 'error', error
-    
+      
+
 
 
 
