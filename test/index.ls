@@ -17,8 +17,8 @@ describe 'root', ->
         
       initialize: ->
         @log = []
-        @on 'changeState', (name, data) ~> 
-          console.log "changestate", name
+        @subscribe 'changeState', (event, name, data) ~> 
+          console.log "changestate", name, data
           @log.push {name: name, data: data}
 
   specify 'init', -> 
@@ -26,7 +26,8 @@ describe 'root', ->
 
   specify 'setState', -> new p (resolve,reject) ~> 
     sm = new @SM()
-    sm.once 'state:init', (data) ->
+    
+    sm.subscribe 'state:init', (event, data) ->
       assert data is 3
       resolve true
       
@@ -35,7 +36,7 @@ describe 'root', ->
   specify 'fewJumps', -> new p (resolve,reject) ~>
     SM = @SM.extend4000 do
       initialize: ->
-        @once 'state:blu', (data) ->
+        @subscribeOnce 'state:blu', (event, data) ~> 
           @setState 'end'
         
       state_init: (data) -> new p (resolve,reject) ~>
@@ -52,20 +53,20 @@ describe 'root', ->
         
     sm = new SM()
 
-    sm.once 'state:end', ->
+    sm.subscribeOnce 'state:end', ->
+      console.log "LOG IS", sm.log
       assert.deepEqual sm.log, [ { name: 'init', data: 3 }, { name: 'bla', data: 81 }, { name: 'blu', data: undefined }, { name: 'end', data: undefined } ]
       resolve!
       
     sm.setState 'init', 3
     
-    
   specify 'illegalState', -> new p (resolve,reject) ~> 
     sm = new @SM()
     
-    sm.once 'state:init', (data) ->
+    sm.subscribeOnce 'state:init', (data) ->
       sm.setState 'invalid_state', bla: 8
       
-    sm.once 'state:error', (data) ->
+    sm.subscribeOnce 'state:error', (data) ->
       assert.deepEqual map(sm.log, (.name)), [ 'init', 'error' ]
       assert head(sm.log).data is 3
       resolve true
