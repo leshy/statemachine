@@ -6,9 +6,7 @@ require! {
 }
 
 
-console.log simpleMatcher
 export StateMachine = Core.extend4000 simpleMatcher, promiseEventMixin, do
-      
   verifyJump: (name) ->
     if not @states then return true
     if not @state then return true
